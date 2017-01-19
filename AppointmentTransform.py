@@ -28,6 +28,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 	os.mkdir(UPLOAD_FOLDER)
 if not os.path.exists(TRANSFORM_FOLDER):
 	os.mkdir(TRANSFORM_FOLDER)
+if not os.path.exists(STATIC_FOLDER):
+	os.mkdir(STATIC_FOLDER)
 if not os.path.exists(DOWNLOADS_FOLDER):
 	os.mkdir(DOWNLOADS_FOLDER)
 
