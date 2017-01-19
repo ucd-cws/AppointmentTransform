@@ -27,6 +27,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = SECRET_KEY
 
+# Make sure on startup that all appropriate folders exist to do the work
 if not os.path.exists(UPLOAD_FOLDER):
 	os.mkdir(UPLOAD_FOLDER)
 if not os.path.exists(TRANSFORM_FOLDER):
@@ -38,12 +39,18 @@ if not os.path.exists(DOWNLOADS_FOLDER):
 
 
 class CSV_Error(BaseException):
+	"""
+		A specific subclass to raise/catch when can't convert xlsx to csv.
+	"""
 	pass
 
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
 	"""
+		This function handles all of the web side, with different behaviors depending upon if the url is POSTed or retrieved
+		with GET. By default, just returns the main page (last item at bottom), but otherwise, on POST, checks for the
+		presence of a file, and then if it has one, it processes it and renders the download page with a link to the file.
 		From Flask tutorials at http://flask.pocoo.org/docs/0.12/patterns/fileuploads/
 	:return:
 	"""
@@ -77,6 +84,12 @@ def upload_file():
 
 
 def check_and_convert_xlsx(path):
+	"""
+		Given a potential xlsx file (based on extension), calls the XLSX2CSV converter to output a CSV. If already not an
+		XLSX file, just returns the path.
+	:param path:
+	:return:
+	"""
 
 	outfile = os.path.join(TRANSFORM_FOLDER, "xlsx_converted_{}".format(datetime.strftime(datetime.now(), DATE_FORMAT)))
 	if os.path.splitext(path)[1].lower() == ".xlsx":
@@ -119,6 +132,26 @@ def modify_account_headers(path, header_row=0, account_row=2, subaccount_row=1):
 
 
 def reformat_file(path, field_order=OUTPUT_FIELDNAMES):
+	"""
+		The main workerbee - given an already uploaded file (path to file on disk), it does the following:
+		1. Cleans out previous runs of this, so that we don't accumulate crud and fill up disk space. It cleans the upload
+		folder at the very end so it doesn't delete the input file.
+		2. Does a double-whammy line to make sure all of the data is sane - calls check_and_convert_xlsx first, which if
+		file is an XLSX file, converts it to a CSV - regardless, it returns a path to the most current CSV file. This path
+		is then passed to modify_account_headers, which does the first bit of reformatting on the input by collapsing the
+		triple line header into a single line that can be read later - it accounts for a variable number of accounts by having
+		special names that are reserved - it checks for those and doesn't mess with those lines in the header, and then any others
+		it collapses. It moves accounts/subaccounts to acct-subacct format, even when no subaccount exists so that you can
+		split on the hyphen and get the account and subaccount. Returns the path of the new file with the collapsed header.
+		3. This function then does the heavy lifting by actually reading in the file and converting it to the new format.
+		It reads all of the header keys and calls convert_row for each row in the sheet, which outputs a new row for each
+		person where they don't have a null/blank value for the account columns (other columns tracked as special
+		predefined fields). When it's done, it outputs just the filename, which will be paired with the actual URL in
+		the calling function.
+	:param path:
+	:param field_order:
+	:return:
+	"""
 
 	messages = clean_folder(TRANSFORM_FOLDER)
 	messages.append(clean_folder(DOWNLOADS_FOLDER))
@@ -143,6 +176,11 @@ def reformat_file(path, field_order=OUTPUT_FIELDNAMES):
 
 
 def clean_folder(path):
+	"""
+		Deletes all the files in a given folder to save disk space
+	:param path:
+	:return:
+	"""
 	messages = []
 	for filename in os.listdir(path):
 		try:
@@ -154,7 +192,13 @@ def clean_folder(path):
 
 
 def convert_row(row, special_keys=SPECIAL_KEYS):
-
+	"""
+		Given an input row from the original file, outputs all of the NEW rows for the output file
+	:param row: input row
+	:param special_keys: columns to ignore - these are the ones that have specific meanings. Fields not named here are
+	assumed to be accounts.
+	:return: list of new rows to add to the output
+	"""
 	output_rows = []
 	for key in list(set(row.keys())-set(special_keys)):  # for all the keys that aren't in special_keys, bascially, for all of the accounts:
 
@@ -184,7 +228,7 @@ def convert_row(row, special_keys=SPECIAL_KEYS):
 
 def allowed_file(filename):
 	"""
-		From Flask tutorials at http://flask.pocoo.org/docs/0.12/patterns/fileuploads/
+		Adapted rom Flask tutorials at http://flask.pocoo.org/docs/0.12/patterns/fileuploads/
 	:param filename:
 	:return:
 	"""
