@@ -15,7 +15,6 @@ UPLOAD_FOLDER = os.path.join(BASE_FOLDER, "uploads")
 TRANSFORM_FOLDER = os.path.join(BASE_FOLDER, "transforms")
 STATIC_FOLDER = os.path.join(BASE_FOLDER, "static")
 DOWNLOADS_FOLDER = os.path.join(BASE_FOLDER, "static", "downloads")
-#CONVERTER_PATH = os.path.join(sys.exec_prefix, "Scripts", "xlsx2csv")
 CONVERTER_PATH = os.path.join(BASE_FOLDER, "xls2csv", "xlsx2csv.py")
 ALLOWED_EXTENSIONS = ('.xlsx', '.csv')
 SECRET_KEY = b"W\x8c\xb8\xf6I3\\1\xdb\xbdZ'\x90\x08\xb5v\xf1 \xff\xa8\x15v1R"
@@ -47,13 +46,13 @@ def upload_file():
 	if request.method == 'POST':
 		# check if the post request has the file part
 		if 'file' not in request.files:
-			flash('No file part')
+			flash('Error: File not provided')
 			return redirect(request.url)
 		file = request.files['file']
 		# if user does not select file, browser also
 		# submit a empty part without filename
 		if file.filename == '':
-			flash('No selected file')
+			flash("You didn't select a file!")
 			return redirect(request.url)
 		if file and allowed_file(file.filename):
 			new_filename = secure_filename(file.filename)
@@ -68,7 +67,7 @@ def upload_file():
 
 			return render_template("download.html", file_url="/static/downloads/{}".format(converted_file))
 		elif file:  # aka, did allowed_file fail?
-			flash("File Extension not allowed!")
+			flash("File Extension {} not allowed!".format(os.path.splitext(file.filename)[1]))
 
 	return render_template("index.html")
 

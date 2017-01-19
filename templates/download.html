@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
-{% block body %}
+{% block header %}
     <h1>Download Transformed File</h1>
-    <p><a href="{{ file_url }}">Download Now</a></p>
+{% endblock %}
+{% block body %}
+    <p class="notification success"><a href="{{ file_url }}">Download Now</a></p>
 {% endblock %}

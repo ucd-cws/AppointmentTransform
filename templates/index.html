@@ -1,8 +1,12 @@
 {% extends "layout.html" %}
-{% block body %}
+{% block header %}
     <h1>Upload new File</h1>
+{% endblock %}
+{% block body %}
+    <p>Upload a spreadsheet here - select the button to browse for a file. Microsoft Excel (.xlsx) files and Comma Separated Values (.csv) files are supported. Old format Microsoft Excel (.xls) is *not* supported!</p>
 	<form method=post enctype=multipart/form-data>
-	  <p><input type=file name=file>
-		 <input type=submit value=Upload>
+	  <p><label for="file" style="margin: 2em 0 0 0; font-weight:bold;" class="pure-u-1-1">Spreadsheet to transform</label>
+          <input type="file" name="file" class="pure-u-1-1" style="padding:1em;background-color: #ddd;">
+          <input type="submit" value="Transform Sheet" class="pure-button pure-button-primary pure-u-1-1" style="max-width:20em;margin-top:1em"></p>
 	</form>
 {% endblock %}
