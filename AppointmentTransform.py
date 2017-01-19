@@ -18,6 +18,10 @@ DOWNLOADS_FOLDER = os.path.join(BASE_FOLDER, "static", "downloads")
 CONVERTER_PATH = os.path.join(BASE_FOLDER, "xls2csv", "xlsx2csv.py")
 ALLOWED_EXTENSIONS = ('.xlsx', '.csv')
 SECRET_KEY = b"W\x8c\xb8\xf6I3\\1\xdb\xbdZ'\x90\x08\xb5v\xf1 \xff\xa8\x15v1R"
+if sys.executable.endswith("python"): # this is a cheap hack to make it call the same executable if it appears to be a Python install, but that breaks in WSGI, so we'll just call "python" in that case
+	PYTHON_EXEC = sys.executable
+else:
+	PYTHON_EXEC = "python"
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -76,7 +80,7 @@ def check_and_convert_xlsx(path):
 
 	outfile = os.path.join(TRANSFORM_FOLDER, "xlsx_converted_{}".format(datetime.strftime(datetime.now(), DATE_FORMAT)))
 	if os.path.splitext(path)[1].lower() == ".xlsx":
-		return_code = subprocess.call([sys.executable, CONVERTER_PATH, path, outfile])
+		return_code = subprocess.call([PYTHON_EXEC, CONVERTER_PATH, path, outfile])
 		if return_code != 0:
 			raise CSV_Error("Unable to convert to CSV! Return Code = {}".format(return_code))
 		return outfile
