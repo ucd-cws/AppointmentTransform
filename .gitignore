@@ -1,0 +1,5 @@
+.idea/*
+static/downloads/*
+uploads/*
+transforms/*
+*.pyc
